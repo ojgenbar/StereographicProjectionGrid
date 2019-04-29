@@ -1,13 +1,16 @@
-from math import sin, cos, tan, acos, atan, pi, radians, degrees, isclose, hypot
+from math import sin, cos, tan, acos, atan, pi, radians, degrees, hypot
+
 
 pi2 = pi*2
+
+# TODO: Use decimal instead of float
 DEFAULT_DEGREES_STEP = 0.5
 
 
 class StereographicProjector:
     def __init__(self, to_sphere_projector, phi0, lam0):
         self.to_sphere = to_sphere_projector
-        if isclose(phi0, 0.0, abs_tol=1e-10):
+        if abs(phi0) < 1e-9:
             phi0 = 1e-10
         else:
             phi0 = float(phi0)
@@ -40,7 +43,7 @@ class StereographicProjector:
         return z, degrees(rad_a)
 
     def __get_direction(self, rad_a, tan_a, phi, lam):
-        close = isclose(rad_a, 0.0, abs_tol=1e-10)
+        close = abs(rad_a) < 1e-10
         if not close and tan_a < 0.0:
             rad_a = pi - rad_a
         elif close:
@@ -49,24 +52,24 @@ class StereographicProjector:
                     if phi < -self.phi0:
                         rad_a = pi
                     elif phi >= -self.phi0:
-                        if isclose(lam, self.lam0, abs_tol=1e-10):
+                        if abs(lam - self.lam0) < 1e-10:
                             rad_a = pi
             else:
                 if self.phi0 >= phi:
                     rad_a = pi
                 else:
                     if phi < -self.phi0:
-                        if not isclose(lam, self.lam0, abs_tol=1e-10):
+                        if not abs(lam - self.lam0) < 1e-10:
                             rad_a = pi
         return rad_a
 
     def project2plane(self, phi, lam, m=1):
         phi, lam = self.to_sphere.project(phi, lam)
 
-        lam_is_0 = isclose(lam, self.lam0, abs_tol=1e-10)
-        lam_is_180 = isclose(norm_long(lam - 180.0), self.lam0, abs_tol=1e-10)
-        pole = isclose(phi, self.phi0, abs_tol=1e-10) and lam_is_0
-        pole2 = isclose(-phi, self.phi0, abs_tol=1e-10) and lam_is_180
+        lam_is_0 = abs(lam - self.lam0) < 1e-10
+        lam_is_180 = abs(norm_long(lam - 180.0) - self.lam0) < 1e-10
+        pole = abs(phi - self.phi0) < 1e-10 and lam_is_0
+        pole2 = abs(-phi - self.phi0) < 1e-10 and lam_is_180
         if pole2:
             raise ValueError('Cannot project! Pole is reached!')
         elif pole:
@@ -138,7 +141,7 @@ class GridBuilder:
                     if long % dlong == 0:
                         points_to_show.append((long, x, abs_y))
             points.extend([(x, -y) for x, y in points[-1::-1]])
-            if isclose(lat, 0.0, abs_tol=1e-10):
+            if abs(lat) < 1e-9:
                 lat = 0
             lat_dict[lat] = points
             lat_dict_to_show[lat] = points_to_show
@@ -157,13 +160,13 @@ class GridBuilder:
                     else:
                         points.append((x, abs(y)))
                         points_left.append((x, -abs(y)))
-                if isclose(long, 0.0, abs_tol=1e-10):
+                if abs(long) < 1e-9:
                     long = 0
 
                 if long in main_lon_range:
                     long_dict[long] = points
                 if opposit_long in main_lon_range:
-                    if not isclose(self.long0, long, abs_tol=1e-10):
+                    if not abs(self.long0) < 1e-9:
                         long2 = norm_long(2*self.long0-long)
                         long_dict[long2] = points_left
 

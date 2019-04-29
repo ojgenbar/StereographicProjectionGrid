@@ -251,7 +251,8 @@ class GridPainter:
             self.place_axis_label(qp, x, y, '{}°'.format(int(long)), QtCore.Qt.blue)
 
     def draw_curve(self, qp, points):
-        points = [QtCore.QPoint(*self.convert_coords(x, y)) for x, y in points]
+        src_points = points
+        points = [QtCore.QPoint(*self.convert_coords(x, y)) for x, y in src_points]
         qp.drawPolyline(*points)
 
     def draw_grid(self, qp):
@@ -266,8 +267,10 @@ class GridPainter:
             if long == pr.norm_long(self.grid.long0-180):
                 positive = [(x, y) for x, y in points if x >= 0]
                 negative = [(x, y) for x, y in points if x < 0]
-                self.draw_curve(qp, positive)
-                self.draw_curve(qp, negative)
+                if positive:
+                    self.draw_curve(qp, positive)
+                if negative:
+                    self.draw_curve(qp, negative)
             else:
                 self.draw_curve(qp, points)
 
